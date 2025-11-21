@@ -7,7 +7,6 @@ from flask import Flask, render_template, request, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 from flask_cors import CORS  # Habilitar CORS
 from PIL import Image
-import pyzbar.pyzbar as pyzbar  # Lector de QR
 
 # Ruta de Tesseract en tu sistema (ajusta la ruta si es necesario)
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
@@ -67,14 +66,13 @@ def extract_sn_from_text(text: str) -> str | None:
                 return sn
     return None
 
-# Función para leer el QR de la imagen
+# Función para leer el QR de la imagen usando OpenCV
 def read_qr_code(image_path: str):
     img = cv2.imread(image_path)
-    decoded_objects = pyzbar.decode(img)
-    for obj in decoded_objects:
-        # Si es un QR, devolvemos su valor
-        if obj.type == 'QRCODE':
-            return obj.data.decode('utf-8')
+    detector = cv2.QRCodeDetector()
+    value, pts, qr_code = detector(img)
+    if value:
+        return value
     return None
 
 # Función para adivinar la marca basada en el PON S/N
@@ -114,7 +112,7 @@ def process_image():
         save_path = os.path.join(app.config["UPLOAD_FOLDER"], saved_filename)
         file.save(save_path)
 
-        # Intentar leer el QR primero
+        # Intentar leer el QR primero usando OpenCV
         qr_data = read_qr_code(save_path)
 
         if qr_data:
