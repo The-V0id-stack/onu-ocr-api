@@ -146,4 +146,5 @@ def uploaded_file(filename):
 
 # Inicia la aplicación
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0", port=int(os.getenv("PORT", 10000)))
+
